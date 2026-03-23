@@ -12,10 +12,9 @@ class TokenType(Enum):
     EOF = auto()
 
 class Token:
-    def __init__(self, type_: TokenType, value: any, column: int):
+    def __init__(self, type_: TokenType, value: any):
         self.type = type_
         self.value = value
-        self.column = column 
 
     def __repr__(self):
         return f"({self.type.name}, '{self.value}')"
@@ -28,17 +27,18 @@ class Scanner:
         self.text = text
         self.pos = 0
         self.current_char = self.text[self.pos] if len(self.text) > 0 else None
+        self.tokens = []
 
     def advance(self):
         """Przesuwa wskaźnik na kolejny znak w tekście."""
         self.pos += 1
         if self.pos >= len(self.text):
-            self.current_char = None  # Koniec tekstu
+            self.current_char = None 
         else:
             self.current_char = self.text[self.pos]
 
     def skip_whitespace(self):
-        """Pomija spacje, tabulatory i inne białe znaki."""
+        """Pomija spacje."""
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
@@ -58,66 +58,76 @@ class Scanner:
             self.advance()
         return result
 
-    def error(self, start_column: int):
-        """Obsługa błędów z podaniem kolumny (indeksowanej od 1)."""
+    def error(self):
+        """Obsługa błędów."""
         char = self.current_char
-        raise ScannerError(f"Błąd leksykalny w kolumnie {start_column}: Nieoczekiwany znak '{char}'")
+        raise ScannerError(f"Błąd leksykalny: Nieoczekiwany znak '{char}'")
 
     def skaner(self) -> Token:
-        """Główna funkcja skanująca, zwracająca następny token."""
+        """Funkcja skanująca, zwracająca następny token."""
         self.skip_whitespace()
 
-        start_column = self.pos + 1
-
         if self.current_char is None:
-            return Token(TokenType.EOF, 'EOF', start_column)
+            return Token(TokenType.EOF, 'EOF')
 
         if self.current_char.isdigit():
-            return Token(TokenType.INTEGER, self.integer(), start_column)
+            return Token(TokenType.INTEGER, self.integer())
 
         if self.current_char.isalpha():
-            return Token(TokenType.IDENTIFIER, self.identifier(), start_column)
+            return Token(TokenType.IDENTIFIER, self.identifier())
 
         if self.current_char == '+':
             self.advance()
-            return Token(TokenType.PLUS, '+', start_column)
+            return Token(TokenType.PLUS, '+')
 
         if self.current_char == '-':
             self.advance()
-            return Token(TokenType.MINUS, '-', start_column)
+            return Token(TokenType.MINUS, '-')
 
         if self.current_char == '*':
             self.advance()
-            return Token(TokenType.MULTIPLY, '*', start_column)
+            return Token(TokenType.MULTIPLY, '*')
 
         if self.current_char == '/':
             self.advance()
-            return Token(TokenType.DIVIDE, '/', start_column)
+            return Token(TokenType.DIVIDE, '/')
 
         if self.current_char == '(':
             self.advance()
-            return Token(TokenType.LPAREN, '(', start_column)
+            return Token(TokenType.LPAREN, '(')
 
         if self.current_char == ')':
             self.advance()
-            return Token(TokenType.RPAREN, ')', start_column)
+            return Token(TokenType.RPAREN, ')')
 
-        self.error(start_column)
+        self.error()
 
-if __name__ == '__main__':
+    def tokenize(self) -> list:
+        """Główna pętla skanująca, która aktualizuje listę tokenów."""
+        while True:
+            token = self.skaner()
+            self.tokens.append(token)
+            
+            if token.type == TokenType.EOF:
+                break
+                
+        return self.tokens
+
+def main() -> list:
+    """Funkcja główna - inicjalizuje skaner i zwraca listę tokenów."""
     wyrazenie = "2+3*(76+8/3)+ 3*(9-3) "
-    
     skaner_obj = Scanner(wyrazenie)
     
-    while True:
-        try:
-            token = skaner_obj.skaner()
-            if token.type == TokenType.EOF:
-                print("Rozpoznano koniec wyrażenia (EOF).")
-                break
-            
-            print(f"Zeskanowano: {token.value} | Kolumna: {token.column}")
-            
-        except ScannerError as e:
-            print(f"\n[!] PRZERWANO SKANOWANIE: {e}")
-            break
+    try:
+        skaner_obj.tokenize()
+    except ScannerError as e:
+        print(f"\n[!] PRZERWANO SKANOWANIE: {e}")
+        
+    return skaner_obj.tokens
+
+if __name__ == '__main__':
+    wczytane_tokeny = main()
+    
+    print("Lista tokenów:")
+    for t in wczytane_tokeny:
+        print(t)
