@@ -105,7 +105,7 @@ class Scanner:
         self.error(start_column)
 
 if __name__ == '__main__':
-    wyrazenie = "2+3*(76+8/3)+ 3*(9-3) $"
+    wyrazenie = "2+3*(76+8/3)+ 3*(9-3) "
     
     skaner_obj = Scanner(wyrazenie)
     
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                 print("Rozpoznano koniec wyrażenia (EOF).")
                 break
             
-            print(f"Zeskanowano: {token:25} | Kolumna: {token.column}")
+            print(f"Zeskanowano: {token.value} | Kolumna: {token.column}")
             
         except ScannerError as e:
             print(f"\n[!] PRZERWANO SKANOWANIE: {e}")
