@@ -1,0 +1,123 @@
+from enum import Enum, auto
+
+class TokenType(Enum):
+    INTEGER = auto()
+    IDENTIFIER = auto()
+    PLUS = auto()
+    MINUS = auto()
+    MULTIPLY = auto()
+    DIVIDE = auto()
+    LPAREN = auto()
+    RPAREN = auto()
+    EOF = auto()
+
+class Token:
+    def __init__(self, type_: TokenType, value: any, column: int):
+        self.type = type_
+        self.value = value
+        self.column = column 
+
+    def __repr__(self):
+        return f"({self.type.name}, '{self.value}')"
+
+class ScannerError(Exception):
+    pass
+
+class Scanner:
+    def __init__(self, text: str):
+        self.text = text
+        self.pos = 0
+        self.current_char = self.text[self.pos] if len(self.text) > 0 else None
+
+    def advance(self):
+        """Przesuwa wskaźnik na kolejny znak w tekście."""
+        self.pos += 1
+        if self.pos >= len(self.text):
+            self.current_char = None  # Koniec tekstu
+        else:
+            self.current_char = self.text[self.pos]
+
+    def skip_whitespace(self):
+        """Pomija spacje, tabulatory i inne białe znaki."""
+        while self.current_char is not None and self.current_char.isspace():
+            self.advance()
+
+    def integer(self) -> int:
+        """Pobiera ciąg cyfr i zwraca jako liczbę całkowitą."""
+        result = ''
+        while self.current_char is not None and self.current_char.isdigit():
+            result += self.current_char
+            self.advance()
+        return int(result)
+
+    def identifier(self) -> str:
+        """Pobiera ciąg liter i cyfr (zaczynający się od litery) jako identyfikator."""
+        result = ''
+        while self.current_char is not None and (self.current_char.isalnum() or self.current_char == '_'):
+            result += self.current_char
+            self.advance()
+        return result
+
+    def error(self, start_column: int):
+        """Obsługa błędów z podaniem kolumny (indeksowanej od 1)."""
+        char = self.current_char
+        raise ScannerError(f"Błąd leksykalny w kolumnie {start_column}: Nieoczekiwany znak '{char}'")
+
+    def skaner(self) -> Token:
+        """Główna funkcja skanująca, zwracająca następny token."""
+        self.skip_whitespace()
+
+        start_column = self.pos + 1
+
+        if self.current_char is None:
+            return Token(TokenType.EOF, 'EOF', start_column)
+
+        if self.current_char.isdigit():
+            return Token(TokenType.INTEGER, self.integer(), start_column)
+
+        if self.current_char.isalpha():
+            return Token(TokenType.IDENTIFIER, self.identifier(), start_column)
+
+        if self.current_char == '+':
+            self.advance()
+            return Token(TokenType.PLUS, '+', start_column)
+
+        if self.current_char == '-':
+            self.advance()
+            return Token(TokenType.MINUS, '-', start_column)
+
+        if self.current_char == '*':
+            self.advance()
+            return Token(TokenType.MULTIPLY, '*', start_column)
+
+        if self.current_char == '/':
+            self.advance()
+            return Token(TokenType.DIVIDE, '/', start_column)
+
+        if self.current_char == '(':
+            self.advance()
+            return Token(TokenType.LPAREN, '(', start_column)
+
+        if self.current_char == ')':
+            self.advance()
+            return Token(TokenType.RPAREN, ')', start_column)
+
+        self.error(start_column)
+
+if __name__ == '__main__':
+    wyrazenie = "2+3*(76+8/3)+ 3*(9-3) $"
+    
+    skaner_obj = Scanner(wyrazenie)
+    
+    while True:
+        try:
+            token = skaner_obj.skaner()
+            if token.type == TokenType.EOF:
+                print("Rozpoznano koniec wyrażenia (EOF).")
+                break
+            
+            print(f"Zeskanowano: {token:25} | Kolumna: {token.column}")
+            
+        except ScannerError as e:
+            print(f"\n[!] PRZERWANO SKANOWANIE: {e}")
+            break
