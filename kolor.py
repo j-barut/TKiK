@@ -1,5 +1,5 @@
 
-from list_of_colours import COLOURS
+from kolory import COLOURS
 
 class Colour:
 

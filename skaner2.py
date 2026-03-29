@@ -11,11 +11,13 @@ class TokenType(Enum):
     MINUS = auto()
     MULTIPLY = auto()
     DIVIDE = auto()
-    LPAREN = auto()
-    RPAREN = auto()
-    EOF = auto()
     EQUAL = auto()
     NOT_EQUAL = auto()
+    LPAREN = auto()
+    RPAREN = auto()
+    WHITESPACE = auto()
+    EOL = auto()
+    EOF = auto()
 
 
 class Token:
@@ -37,10 +39,10 @@ class Scanner2:
         self.stream = stream
         self.tokens = []
 
-    def skip_whitespace(self):
-        """Pomija spacje."""
-        while self.stream.current_char is not None and self.stream.current_char.isspace():
-            self.stream.advance()
+    # def skip_whitespace(self):
+    #     """Pomija spacje."""
+    #     while self.stream.current_char is not None and self.stream.current_char.isspace():
+    #         self.stream.advance()
 
     def integer(self) -> int:
         """Pobiera ciąg cyfr i zwraca jako liczbę całkowitą."""
@@ -65,7 +67,7 @@ class Scanner2:
 
     def skaner(self) -> Token | None:
         """Funkcja skanująca, zwracająca następny token."""
-        self.skip_whitespace()
+        # self.skip_whitespace()
 
         if self.stream.current_char is None:
             return Token(TokenType.EOF, 'EOF')
@@ -107,6 +109,14 @@ class Scanner2:
         if self.stream.current_char == '!=':
             self.stream.advance()
             return Token(TokenType.NOT_EQUAL, '!=')
+
+        if self.stream.current_char == ' ':
+            self.stream.advance()
+            return Token(TokenType.WHITESPACE, ' ')
+
+        if self.stream.current_char == '\n':
+            self.stream.advance()
+            return Token(TokenType.EOL, '\n')
 
         self.error()
         return None
