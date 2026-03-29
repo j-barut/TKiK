@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from typing import Any
 
 class TokenType(Enum):
     INTEGER = auto()
@@ -12,7 +13,7 @@ class TokenType(Enum):
     EOF = auto()
 
 class Token:
-    def __init__(self, type_: TokenType, value: any):
+    def __init__(self, type_: TokenType, value: Any):
         self.type = type_
         self.value = value
 
@@ -63,7 +64,7 @@ class Scanner:
         char = self.current_char
         raise ScannerError(f"Błąd leksykalny: Nieoczekiwany znak '{char}'")
 
-    def skaner(self) -> Token:
+    def skaner(self) -> Token | None:
         """Funkcja skanująca, zwracająca następny token."""
         self.skip_whitespace()
 
@@ -101,6 +102,7 @@ class Scanner:
             return Token(TokenType.RPAREN, ')')
 
         self.error()
+        return None
 
     def tokenize(self) -> list:
         """Główna pętla skanująca, która aktualizuje listę tokenów."""
@@ -113,21 +115,4 @@ class Scanner:
                 
         return self.tokens
 
-def main() -> list:
-    """Funkcja główna - inicjalizuje skaner i zwraca listę tokenów."""
-    wyrazenie = "2+3*(76+8/3)+ 3*(9-3) "
-    skaner_obj = Scanner(wyrazenie)
-    
-    try:
-        skaner_obj.tokenize()
-    except ScannerError as e:
-        print(f"\n[!] PRZERWANO SKANOWANIE: {e}")
-        
-    return skaner_obj.tokens
 
-if __name__ == '__main__':
-    wczytane_tokeny = main()
-    
-    print("Lista tokenów:")
-    for t in wczytane_tokeny:
-        print(t)
